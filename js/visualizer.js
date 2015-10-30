@@ -46,6 +46,8 @@ getDataRows(function(data) {
 	console.log(data);
 });
 
+/*Get the data rows from the csv file. If chrome complains,
+rember to start the server.*/
 function getDataRows (f) {
     d3.csv("./js/survey-data.csv",
 	   function(error,data) {
