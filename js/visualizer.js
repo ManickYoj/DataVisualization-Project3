@@ -46,6 +46,19 @@ getDataRows(function(data) {
 	console.log(data);
 });
 
+var singlecountryvis = d3.select("body")
+	.append("svg")
+	.attr("width", width)
+	.attr("height", height);
+
+setupSingleCountry(singlecountryvis,"Greece", "Trustworthy");
+/* Create the single country visualization based on the
+demographic data of all the respondents
+*/
+function setupSingleCountry (svg,country,metric){
+	//do the thing here!
+}
+
 /*Get the data rows from the csv file. If chrome complains,
 rember to start the server.*/
 function getDataRows (f) {
