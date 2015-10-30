@@ -7,34 +7,48 @@
  */
 
 
+var GLOBAL = { data: []
+			 }
+
+
 var width = 960,
-  height = 1160;
+	height = 1160;
 
 
  //Define map projection
 var projection = d3.geo.mercator()
-                       .translate([width/2, height/2])
-                       .scale([500]);
+	.translate([width/2, height/2])
+	.scale([500]);
 
 //Define path generator
 var path = d3.geo.path()
-                 .projection(projection);
+	.projection(projection);
 
 //Create SVG element
 var svg = d3.select("body")
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height);
+	.append("svg")
+	.attr("width", width)
+	.attr("height", height);
 
 //Load in GeoJSON data
 d3.json("./js/europe-map.geo.json", function(json) {
-
-    //Bind data and create one path per GeoJSON feature
-    svg.selectAll("path")
-       .data(json.features)
-       .enter()
-       .append("path")
-       .attr("d", path)
-       .style("fill", "steelblue");
-
+	//Bind data and create one path per GeoJSON feature
+	svg.selectAll("path")
+	 .data(json.features)
+	 .enter()
+	 .append("path")
+	 .attr("d", path)
+	 .style("fill", "steelblue");
 });
+
+getDataRows(function(data) {
+	GLOBAL.data = data;
+	console.log(data);
+});
+
+function getDataRows (f) {
+    d3.csv("./js/survey-data.csv",
+	   function(error,data) {
+	       f(data);
+	   });
+}
