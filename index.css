@@ -1,0 +1,12 @@
+.country {
+  fill: #EEE;
+  stroke: black;
+}
+
+.country.selected {
+  fill: black;
+}
+
+.country:hover:not(.selected) {
+  fill: #888;
+}

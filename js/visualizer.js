@@ -7,8 +7,10 @@
  */
 
 
-var GLOBAL = { data: []
-			 }
+var GLOBAL = {
+  data: [],
+  selected: null,
+};
 
 
 var width = 960,
@@ -34,16 +36,19 @@ var svg = d3.select("body")
 d3.json("./js/europe-map.geo.json", function(json) {
 	//Bind data and create one path per GeoJSON feature
 	svg.selectAll("path")
-	 .data(json.features)
-	 .enter()
-	 .append("path")
-	 .attr("d", path)
-	 .style("fill", "steelblue");
+    .data(json.features)
+	  .enter()
+	  .append("path")
+    .classed("country", true)
+	  .attr({
+      d: path,
+      id: (d) => `country${d.id}`,
+    })
+    .on("click", selectCountry);
 });
 
 getDataRows(function(data) {
 	GLOBAL.data = data;
-	console.log(data);
 });
 
 /*Get the data rows from the csv file. If chrome complains,
@@ -53,4 +58,14 @@ function getDataRows (f) {
 	   function(error,data) {
 	       f(data);
 	   });
+}
+
+function selectCountry (countryDatum) {
+  if (GLOBAL.selected !== null)
+    svg.select(`#country${GLOBAL.selected.id}`).classed("selected", false);
+
+  GLOBAL.selected = countryDatum;
+  svg.select(`#country${countryDatum.id}`).classed("selected", true);
+
+  // TODO: Display data here
 }
