@@ -14,6 +14,8 @@ var GLOBAL = { data: [],
 	opinionIDs: [],
   selected: null,
   question: "Q44",
+  currentsegment:"Trustworthiness",
+  currentcoutnry: null
 };
 
 var width = 960,
@@ -51,26 +53,33 @@ d3.json("./js/europe-map.geo.json", function(json) {
     .on("click", selectCountry);
 });
 
+var opinionQuestions = {
+  	"Q44": "Trustworthiness",
+  	"Q45": "Arrogance",
+  	"Q46": "Compassion"
+  };
+
 d3.selectAll(".questionButton")
   .on("click", function() {
     GLOBAL.question = d3.select(this).attr("id");
     tabulateData(d3.select(this).attr("id"));
+    GLOBAL.currentsegment = opinionQuestions[d3.select(this).attr("id")];
+    if (!GLOBAL.currentcoutnry){
+    	updateSingleCountry(GLOBAL.currentcoutnry, GLOBAL.currentsegment);
+    }
   });
 
 getDataRows(function(data) {
 	GLOBAL.data = data;
-	setupSingleCountry();
-	updateSingleCountry("Greece", "Trustworthiness");
-
+	setupSingleCountry("Germany","Trustworthiness");
 });
 
 /* Create the single country visualization based on the
 demographic data of all the respondents
 */
-function setupSingleCountry (){
+function setupSingleCountry (country, metric){
 	var svg = d3.select("#singleCountry")
 	var s = computeSizes(svg);
-
 	var barWidth = s.chartWidth/(2*GLOBAL.segments.length-1);
 
 	svg.append("text")
@@ -80,20 +89,16 @@ function setupSingleCountry (){
 		.attr("dy","0.3em")
 		.style("text-anchor","middle");
 
+
+
 	var sel = svg.selectAll("g")
 		.data(GLOBAL.segments)
 		.enter().append("g")
-		.attr("class", function(d){return d})
+		.attr("class", function(d){return d;})
 		.attr("transform",
 	      function(d,i) { return "translate("+(s.margin+(i*2)*barWidth)+",0)"; });
-;
-}
 
-function updateSingleCountry (country, metric){
-	var svg = d3.select("#singleCountry")
-	var s = computeSizes(svg);
-	var barWidth = s.chartWidth/(2*GLOBAL.segments.length-1);
-
+	
 	var counts = [{},{},{}];
 	var poscounts = [{},{},{}];
 	var negcounts = [{},{},{}];
@@ -113,24 +118,6 @@ function updateSingleCountry (country, metric){
 		totalneg = counts.allneg;
 	});
 
-	var yPosPos = d3.scale.linear() 
-		.domain([0,totalpos])
-		.range([s.height-s.margin,s.margin]);
-
-	var yPosNeg = d3.scale.linear() 
-		.domain([0,totalneg])
-		.range([s.height-s.margin,s.margin]);
-
-	var heightPos = d3.scale.linear() 
-		.domain([0,totalpos])
-		.range([0,s.chartHeight]);
-
-	var heightNeg = d3.scale.linear() 
-		.domain([0,totalneg])
-		.range([0,s.chartHeight]);
-
-
-
 	poscounts.forEach(function(c,i) { 
 		// first convert to an array of entries
 		var d = d3.entries(c);  
@@ -140,6 +127,17 @@ function updateSingleCountry (country, metric){
 		cumulate(d);
 		poscounts[i] = d;
 	});
+
+		negcounts.forEach(function(c,i) { 
+		// first convert to an array of entries
+		var d = d3.entries(c);  
+	  // sort them
+		d.sort(function(a,b) { return d3.ascending(a.key,b.key); });
+		// then cumulate them
+		cumulate(d);
+		negcounts[i] = d;
+	});
+
 
 	var posColorsRng = ["#ECF9EC", "#D4F1D4","#BDE9BD","#A6E1A6","#8ED98E","#77D277","#60CA60","#48C248"];
 
@@ -160,17 +158,6 @@ function updateSingleCountry (country, metric){
 		"65+": posColorsRng[6],
 	}
 
-
-	negcounts.forEach(function(c,i) { 
-		// first convert to an array of entries
-		var d = d3.entries(c);  
-	  // sort them
-		d.sort(function(a,b) { return d3.ascending(a.key,b.key); });
-		// then cumulate them
-		cumulate(d);
-		negcounts[i] = d;
-	});
-
 	var negColorsRng = ["#FFE5E5","#FFCCCC","#FFB3B3","#FF9999","#FF8080","#FF6666","#FF4D4D","#FF3333"];
 	
 	var negColors = {
@@ -190,33 +177,145 @@ function updateSingleCountry (country, metric){
 		"65+": negColorsRng[6],
 	}
 
-	var possel = svg.selectAll("g")
+	var possel = sel
 		.data(poscounts)
 		.append("g")
 		.attr("class", "pos");
 
+	var posbars = possel.selectAll(".bar")
+		.data(function(d) {return d;});
 
-	 var bars = possel.selectAll(".bar")
-		.data(function(d) {console.log(d); return d});
-
-	bars.enter().append("rect")
+	posbars.enter().append("rect")
 		.attr("class","bar")
 		.style("fill",function (d) {return posColors[d.key];})
 		.style("stroke", "black")
 		.attr("x", 0)
-		.attr("y", function(d){return yPosPos(d.cumulative + d.value);})
-		.attr("height",function(d){return heightPos(d.value);})
+		.attr("y", s.margin+s.chartHeight/2)
+		.attr("height", 0)
 		.attr("width",barWidth);
+	
+	var negsel = sel
+		.data(negcounts)
+		.append("g")
+		.attr("class", function (d) {console.log(d); return "neg";});
+
+	var negbars = negsel.selectAll(".bar")
+		.data(function(d) {return d});
+
+	negbars.enter().append("rect")
+		.attr("class","bar")
+		.style("fill",function (d) {return negColors[d.key];})
+		.style("stroke", "black")
+		.attr("x", 0)
+		.attr("y", s.margin+s.chartHeight/2)
+		.attr("height",0)
+		.attr("width",barWidth);
+}
+
+function updateSingleCountry (country, metric){
+	var svg = d3.select("#singleCountry")
+	var s = computeSizes(svg);
+
+	var counts = [{},{},{}];
+	var poscounts = [{},{},{}];
+	var negcounts = [{},{},{}];
+
+	var totalpos = 0;
+	var totalneg = 0;
 
 
+	svg.select("#title")
+		.text(country + ": " + metric);
+
+	GLOBAL.segments.forEach(function(seg,i){
+		counts = countSplitsForCountry(GLOBAL.data, country, metric, seg);
+		poscounts[i] = counts.poscounts;
+		negcounts[i] = counts.negcounts;
+		totalpos = counts.allpos;
+		totalneg = counts.allneg;
+	});
+
+	var highestcount = totalpos > totalneg ? totalpos : totalneg;
+	console.log(highestcount);
+	console.log(totalpos);
+	console.log(totalneg);
+
+	var yPosPos = d3.scale.linear() 
+		.domain([0,highestcount])
+		.range([s.margin+(s.chartHeight/2),s.margin]);
+
+	var yPosNeg = d3.scale.linear() 
+		.domain([0,highestcount])
+		.range([s.margin+(s.chartHeight/2),s.height-s.margin]);
+
+	var height = d3.scale.linear() 
+		.domain([0,highestcount])
+		.range([0,s.chartHeight/2]);
+
+	poscounts.forEach(function(c,i) { 
+		// first convert to an array of entries
+		var d = d3.entries(c);  
+	  // sort them
+		d.sort(function(a,b) { return d3.ascending(a.key,b.key); });
+		// then cumulate them
+		cumulate(d);
+		poscounts[i] = d;
+	});
+
+	negcounts.forEach(function(c,i) { 
+		// first convert to an array of entries
+		var d = d3.entries(c);  
+	  // sort them
+		d.sort(function(a,b) { return d3.ascending(a.key,b.key); });
+		// then cumulate them
+		cumulate(d);
+		negcounts[i] = d;
+	});
+
+	var possel = svg.selectAll(".pos")
+		.data(poscounts);
+
+	var posbars = possel.selectAll(".bar")
+		.data(function(d) {return d;});
+
+	posbars.transition()
+    .duration(2000)
+		.attr("y", function(d){
+			console.log(d);
+			return yPosPos(d.cumulative + d.value);})
+		.attr("height",function(d){return height(d.value);});
+	
+	var negsel = svg.selectAll(".neg")
+		.data(negcounts);
+
+	var negbars = negsel.selectAll(".bar")
+		.data(function(d) { console.log(d); return d;});
+
+	negbars
+		.transition()
+    .duration(2000)
+		.attr("y", function(d){return yPosNeg(d.cumulative);})
+		.attr("height",function(d){return height(d.value);});
 }
 
 function countSplitsForCountry (data, country, metric, segment) { 
   var poscounts = {}
   var negcounts = {}
 
-  if (segment === "Age"){
-  	//This is for bucketing the ages
+//Initialize these to 0, so that we can transition all the elements
+	if (segment === "Nationality"){
+		poscounts["Britain"] = 0;
+		poscounts["Czech Republic"] = 0;
+		poscounts["France"] = 0;
+		poscounts["Germany"] = 0;
+		poscounts["Greece"] = 0;
+		poscounts["Italy"] = 0;
+		poscounts["Poland"] = 0;
+		poscounts["Spain"] = 0;
+	} else if (segment === "Gender") {
+		poscounts["Female"] = 0;
+		poscounts["Male"] = 0;
+	} else if (segment === "Age"){
 		poscounts["18-29"] = 0;
 		poscounts["30-49"] = 0;
 		poscounts["50-64"] = 0;
@@ -328,7 +427,9 @@ function selectCountry (countryDatum) {
   GLOBAL.selected = countryDatum;
   d3.select(this).classed("selected", true);
 
-  // TODO: Display data here
+  var countryToUpdate = countryDatum.properties.country === "United Kingdom" ? "Great Britain/United Kingdom": countryDatum.properties.country;
+  GLOBAL.currentcoutnry = countryToUpdate;
+  updateSingleCountry(countryToUpdate, GLOBAL.currentsegment);
 }
 
 function tabulateData(question) {
