@@ -7,8 +7,13 @@
  */
 
 
-var GLOBAL = { data: []
-			 }
+var GLOBAL = { data: [],
+	countries = [],
+	demographicLabels = ["Nationality", "Gender", "Age"],
+	demographicIDs = ["COUNTRY", "Q164", "Q165"],
+	opinionLabels = [],
+	opinionIDs = []
+	}
 
 
 var width = 960,
@@ -51,13 +56,32 @@ var singlecountryvis = d3.select("body")
 	.attr("width", width)
 	.attr("height", height);
 
-setupSingleCountry(singlecountryvis,"Greece", "Trustworthy");
+initializeSingleCountry(singlecountryvis,"Greece", "Trustworthy");
 /* Create the single country visualization based on the
 demographic data of all the respondents
 */
-function setupSingleCountry (svg,country,metric){
-	//do the thing here!
+function initializeSingleCountry (svg,country,metric){
+	var svg = d3.select(svg);
+	var s = computeSizes(svg);
+	var barWidth = s.chartWidth/(2*GLOBAL.demographicIDs.length-1);
+
+
 }
+
+function computeSizes (svg) { 
+  // get the size of the SVG element
+  var height = svg.attr("height");
+  var width = svg.attr("width");
+  var margin = 100;
+
+  // the chart lives in the svg surrounded by a margin of 100px
+
+  return {height:height,
+    width: width,
+    margin: margin,
+    chartHeight: height-2*margin,
+    chartWidth: width-2*margin}
+} 
 
 /*Get the data rows from the csv file. If chrome complains,
 rember to start the server.*/
