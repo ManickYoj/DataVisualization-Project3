@@ -1,3 +1,9 @@
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
 .country {
   fill: #EEE;
   stroke: black;
@@ -9,4 +15,32 @@
 
 .country:hover:not(.selected) {
   fill: #888;
+}
+
+svg#chart {
+  width: 100%;
+  height: 100%;
+}
+
+#controlPanel {
+  position: absolute;
+  width: 100%;
+  bottom: 0;
+  margin-bottom: 10px;
+
+  display: flex;
+  justify-content:center;
+}
+
+.questionButton {
+  padding: 10px;
+  margin: 10px;
+  background: #EEE;
+  outline: none;
+  border: 1px solid #000;
+  transition: background 0.2s linear;
+}
+
+.questionButton:hover {
+  background: #AAA;
 }
