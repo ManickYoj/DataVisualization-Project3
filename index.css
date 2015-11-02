@@ -10,11 +10,11 @@ html, body {
 }
 
 .country.selected {
-  fill: black;
+  stroke-width: 4px;
 }
 
-.country:hover:not(.selected) {
-  fill: #888;
+.country:hover {
+  stroke-width: 2px;
 }
 
 svg#chart {
@@ -43,4 +43,9 @@ svg#chart {
 
 .questionButton:hover {
   background: #AAA;
+}
+
+.questionButton.selected {
+  background: #333;
+  color: white;
 }
