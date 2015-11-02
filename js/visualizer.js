@@ -14,7 +14,7 @@ var GLOBAL = { data: [],
 	opinionIDs: [],
   selected: null,
   question: "Q44",
-  currentsegment:"Trustworthiness",
+  currentsegment: null,
   currentcoutnry: null
 };
 
@@ -64,7 +64,7 @@ d3.selectAll(".questionButton")
     GLOBAL.question = d3.select(this).attr("id");
     tabulateData(d3.select(this).attr("id"));
     GLOBAL.currentsegment = opinionQuestions[d3.select(this).attr("id")];
-    if (!GLOBAL.currentcoutnry){
+    if (GLOBAL.currentcoutnry !== null){
     	updateSingleCountry(GLOBAL.currentcoutnry, GLOBAL.currentsegment);
     }
   });
@@ -89,7 +89,13 @@ function setupSingleCountry (country, metric){
 		.attr("dy","0.3em")
 		.style("text-anchor","middle");
 
-
+	svg.append("line")
+		.attr("x1", s.margin)
+    .attr("y1", s.margin + s.chartHeight/2)
+    .attr("x2", s.margin + s.chartWidth)
+    .attr("y2", s.margin + s.chartHeight/2)
+    .attr("stroke-width", 2)
+    .attr("stroke", "black");
 
 	var sel = svg.selectAll("g")
 		.data(GLOBAL.segments)
@@ -98,7 +104,14 @@ function setupSingleCountry (country, metric){
 		.attr("transform",
 	      function(d,i) { return "translate("+(s.margin+(i*2)*barWidth)+",0)"; });
 
-	
+	sel.append("text")
+		.attr("class", "label")
+		.attr("x", 0+barWidth/2)
+		.attr("y", 2*s.margin/3)
+		.attr("dy","0.3em")
+		.style("text-anchor","middle")
+		.text(function(d){return d;});
+
 	var counts = [{},{},{}];
 	var poscounts = [{},{},{}];
 	var negcounts = [{},{},{}];
@@ -108,7 +121,7 @@ function setupSingleCountry (country, metric){
 
 
 	svg.select("#title")
-		.text(country + ": " + metric);
+		.text(" ");
 
 	GLOBAL.segments.forEach(function(seg,i){
 		counts = countSplitsForCountry(GLOBAL.data, country, metric, seg);
@@ -192,7 +205,26 @@ function setupSingleCountry (country, metric){
 		.attr("x", 0)
 		.attr("y", s.margin+s.chartHeight/2)
 		.attr("height", 0)
-		.attr("width",barWidth);
+		.attr("width",barWidth)
+		.on("mouseover",function(d,i) { 
+	    this.style.fill = "#772310"; 
+	    var bar = d3.select(this);
+	    var parentGroup = d3.select(this.parentNode.parentNode);
+	    showToolTip(parentGroup,
+	    +bar.attr("x")+bar.attr("width")/2,
+			+bar.attr("y")-TOOLTIP.height/2-5,
+			d.key,
+			d.value);
+	    // dirty hack!
+	    d3.selectAll(".tooltip")
+		.attr("transform",
+		      d3.select(this.parentNode).attr("transform"));
+	})
+	.on("mouseout",function(d,i) { 
+	    this.style.fill = posColors[d.key]; 
+	    hideToolTip();
+	});
+;
 	
 	var negsel = sel
 		.data(negcounts)
@@ -209,7 +241,24 @@ function setupSingleCountry (country, metric){
 		.attr("x", 0)
 		.attr("y", s.margin+s.chartHeight/2)
 		.attr("height",0)
-		.attr("width",barWidth);
+		.attr("width",barWidth).on("mouseover",function(d,i) { 
+	    this.style.fill = "#772310"; 
+	    var bar = d3.select(this);
+	    var parentGroup = d3.select(this.parentNode.parentNode);
+	    showToolTip(parentGroup,
+	    +bar.attr("x")+bar.attr("width")/2,
+			+bar.attr("y")-TOOLTIP.height/2-5,
+			d.key,
+			d.value);
+	    // dirty hack!
+	    d3.selectAll(".tooltip")
+		.attr("transform",
+		      d3.select(this.parentNode).attr("transform"));
+	})
+	.on("mouseout",function(d,i) { 
+	    this.style.fill = negColors[d.key]; 
+	    hideToolTip();
+	});
 }
 
 function updateSingleCountry (country, metric){
@@ -429,7 +478,9 @@ function selectCountry (countryDatum) {
 
   var countryToUpdate = countryDatum.properties.country === "United Kingdom" ? "Great Britain/United Kingdom": countryDatum.properties.country;
   GLOBAL.currentcoutnry = countryToUpdate;
-  updateSingleCountry(countryToUpdate, GLOBAL.currentsegment);
+  if (GLOBAL.currentsegment !== null){
+  	updateSingleCountry(countryToUpdate, GLOBAL.currentsegment);
+  }
 }
 
 function tabulateData(question) {
@@ -481,3 +532,41 @@ function cumulate (arr) {
 	cumulative += arr[i].value;
     }
 }
+//Tool Tip STuff
+var TOOLTIP = {width:250, height:70}
+
+function showToolTip (svg,cx,cy,text1,text2) {
+
+  svg.append("rect")
+		.attr("class","tooltip")
+		.attr("x",cx-TOOLTIP.width/2)
+		.attr("y",cy-TOOLTIP.height/2)
+		.attr("width",TOOLTIP.width)
+		.attr("height",TOOLTIP.height)
+		.style("fill","#dd6112")
+		.style("stroke","#772310")
+		.style("stroke-width","3px");
+
+  svg.append("text")
+		.attr("class","tooltip")
+		.attr("x",cx)
+		.attr("y",cy-15)
+		.attr("dy","0.3em")
+		.style("text-anchor","middle")
+		.text(text1);
+
+  svg.append("text")
+		.attr("class","tooltip")
+		.attr("x",cx)
+		.attr("y",cy+15)
+		.attr("dy","0.3em")
+		.style("text-anchor","middle")
+		.text(text2);
+
+}
+
+function hideToolTip () {
+    d3.selectAll(".tooltip").remove();
+}
+
+
