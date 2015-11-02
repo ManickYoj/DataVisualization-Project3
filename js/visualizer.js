@@ -106,6 +106,7 @@ function tabulateData(question) {
   counts["CR"] = counts["Czech Republic"];
   delete counts["Great Britain/United Kingdom"];
   delete counts["Czech Republic"];
+  delete counts["Don't know"]
   delete counts[" "]
 
   // Establish color scale
@@ -118,7 +119,6 @@ function tabulateData(question) {
 
   // Set new colors
   for (const country in counts) {
-    if (country === "Don't know") continue;
     d3.select(`#${country}`)
       .style("fill", color(counts[country]));
   }
