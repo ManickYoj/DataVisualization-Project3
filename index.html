@@ -11,12 +11,23 @@
      <!-- Single Country Visualization -->
     <svg id="singleCountry" height="500" width="800" style="border: 1px solid grey;"></svg>
 
-    <!-- Control Panel -->
-    <div id="controlPanel">
+    <!-- Control Panels -->
+    <div class="controlPanel" id="controlPanelLeft">
+      Unselected
+      <ul id="unselectedList">
+      </ul>
+
+      Selected
+      <ul id="selectedList">
+      </ul>
+    </div>
+
+    <div class="controlPanel" id="controlPanelBottom">
       <button class="questionButton selected" id="Q44">Trustworthiness</button>
       <button class="questionButton" id="Q45">Arrogance</button>
       <button class="questionButton" id="Q46">Compassion</button>
     </div>
+
 
     <!-- Libraries -->
     <script src="js/babel.min.js"></script>

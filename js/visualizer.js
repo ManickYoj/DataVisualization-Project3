@@ -6,31 +6,32 @@
  *  creates the visualization.
  */
 
-var GLOBAL = {
+const GLOBAL = {
   data: [],
-	countries: [],
 	segments: ["Nationality", "Gender", "Age"],
-	opinionLabels: [],
-	opinionIDs: [],
   selected: [],
   question: "Q44",
   currentsegment: null,
 };
 
-var width = 960,
+const countryCounts = {
+
+};
+
+const width = 960,
 	height = 1160;
 
 //Define map projection
-var projection = d3.geo.mercator()
+const projection = d3.geo.mercator()
 	.translate([width/2, 3*height/4])
 	.scale([500]);
 
 //Define path generator
-var path = d3.geo.path()
+const path = d3.geo.path()
 	.projection(projection);
 
 //Create SVG element
-var g = d3.select("#chart")
+const g = d3.select("#chart")
   .append("g")
 
 //Load in GeoJSON data
@@ -43,11 +44,7 @@ d3.json("./js/europe-map.geo.json", function(json) {
     .classed("country", true)
 	  .attr({
       d: path,
-      id: (d) => {
-        if (d.properties.country === "United Kingdom") return "UK";
-        if (d.properties.country === "Czech Republic") return "CR";
-        else return `${d.properties.country}`;
-      },
+      id: d => countryNameMap(d.properties.country),
     })
     .on("click", function (d) {
       const elem = d3.select(this);
@@ -67,11 +64,11 @@ d3.json("./js/europe-map.geo.json", function(json) {
     });
 });
 
-var opinionQuestions = {
-  	"Q44": "Trustworthiness",
-  	"Q45": "Arrogance",
-  	"Q46": "Compassion"
-  };
+const opinionQuestions = {
+	"Q44": "Trustworthiness",
+  "Q45": "Arrogance",
+  "Q46": "Compassion"
+};
 
 d3.selectAll(".questionButton")
   .on("click", function() {
@@ -83,12 +80,20 @@ d3.selectAll(".questionButton")
     elem.classed("selected", true);
     GLOBAL.question = elem.attr("id");
     GLOBAL.currentsegment = opinionQuestions[elem.attr("id")];
+
+    // Update visualizations
     updateSingleCountry();
-    tabulateData(d3.select(this).attr("id"));
+    tabulateData(elem.attr("id"));
   });
 
 getDataRows(function(data) {
 	GLOBAL.data = data;
+
+  data.forEach((d) => {
+    countryNameMap(d.COUNTRY);
+    countryCounts
+  });
+
 	setupSingleCountry("Germany","Trustworthiness");
 });
 
@@ -141,38 +146,34 @@ function setupSingleCountry (country, metric){
 	svg.select("#title")
 		.text(" ");
 
-	GLOBAL.segments.forEach(function(seg,i){
+	GLOBAL.segments.forEach((seg,i) => {
 		counts = countSplitsForCountry(GLOBAL.data, country, metric, seg);
+
 		poscounts[i] = counts.poscounts;
 		negcounts[i] = counts.negcounts;
+
 		totalpos = counts.allpos;
 		totalneg = counts.allneg;
 	});
 
-	poscounts.forEach(function(c,i) { 
-		// first convert to an array of entries
-		var d = d3.entries(c);  
-	  // sort them
-		d.sort(function(a,b) { return d3.ascending(a.key,b.key); });
-		// then cumulate them
-		cumulate(d);
-		poscounts[i] = d;
-	});
 
-		negcounts.forEach(function(c,i) { 
-		// first convert to an array of entries
-		var d = d3.entries(c);  
-	  // sort them
-		d.sort(function(a,b) { return d3.ascending(a.key,b.key); });
-		// then cumulate them
-		cumulate(d);
-		negcounts[i] = d;
-	});
+  const sortAndCumulate = (c, i) => {
+    const d = d3.entries(c);
+    d.sort((a, b) => d3.ascending(a.key, b.key));
+    cumulate(d);
+    return d;
+  }
+
+  poscounts = poscounts.map(sortAndCumulate);
+  negcounts = negcounts.map(sortAndCumulate);
 
 
-	var posColorsRng = ["#ECF9EC", "#D4F1D4","#BDE9BD","#A6E1A6","#8ED98E","#77D277","#60CA60","#48C248"];
+	const posColorsRng = [
+    "#ECF9EC", "#D4F1D4", "#BDE9BD", "#A6E1A6",
+    "#8ED98E", "#77D277", "#60CA60", "#48C248",
+  ];
 
-	var posColors = {
+	const posColors = {
 		"Britain": posColorsRng[0],
 		"Czech Republic": posColorsRng[1],
 		"France": posColorsRng[2],
@@ -181,17 +182,22 @@ function setupSingleCountry (country, metric){
 		"Italy": posColorsRng[5],
 		"Poland": posColorsRng[6],
 		"Spain": posColorsRng[7],
+
 		"Female": posColorsRng[0],
 		"Male": posColorsRng[7],
+
 		"18-29": posColorsRng[0],
 		"30-49": posColorsRng[2],
 		"50-64": posColorsRng[4],
 		"65+": posColorsRng[6],
-	}
+	};
 
-	var negColorsRng = ["#FFE5E5","#FFCCCC","#FFB3B3","#FF9999","#FF8080","#FF6666","#FF4D4D","#FF3333"];
+	const negColorsRng = [
+    "#FFE5E5", "#FFCCCC", "#FFB3B3", "#FF9999",
+    "#FF8080", "#FF6666", "#FF4D4D", "#FF3333",
+  ];
 	
-	var negColors = {
+	const negColors = {
 		"Britain": negColorsRng[0],
 		"Czech Republic": negColorsRng[1],
 		"France": negColorsRng[2],
@@ -200,13 +206,15 @@ function setupSingleCountry (country, metric){
 		"Italy": negColorsRng[5],
 		"Poland": negColorsRng[6],
 		"Spain": negColorsRng[7],
+
 		"Female": negColorsRng[0],
 		"Male": negColorsRng[7],
+
 		"18-29": negColorsRng[0],
 		"30-49": negColorsRng[2],
 		"50-64": negColorsRng[4],
 		"65+": negColorsRng[6],
-	}
+	};
 
 	var possel = sel
 		.data(poscounts)
@@ -214,7 +222,7 @@ function setupSingleCountry (country, metric){
 		.attr("class", "pos");
 
 	var posbars = possel.selectAll(".bar")
-		.data(function(d) {return d;});
+		.data(d => d);
 
 	posbars.enter().append("rect")
 		.attr("class","bar")
@@ -279,15 +287,20 @@ function setupSingleCountry (country, metric){
 	});
 }
 
-function updateSingleCountry (){
+function updateSingleCountry () {
+  
+  const svg = d3.select("#singleCountry")
+	const s = computeSizes(svg);
+
   if (GLOBAL.currentsegment === null) return;
-  if (GLOBAL.selected.length === 0) return;
+  if (GLOBAL.selected.length === 0) {
+  	const bars = svg.selectAll(".bar");
+  	bars.attr("y", s.margin+s.chartHeight/2)
+  		.attr("height", 0);
+  };
 
   const country = GLOBAL.selected[GLOBAL.selected.length-1]
   const metric = GLOBAL.currentsegment
-
-	var svg = d3.select("#singleCountry")
-	var s = computeSizes(svg);
 
 	var counts = [{},{},{}];
 	var poscounts = [{},{},{}];
@@ -380,9 +393,19 @@ function countSplitsForCountry (data, country, metric, segment) {
 		poscounts["Italy"] = 0;
 		poscounts["Poland"] = 0;
 		poscounts["Spain"] = 0;
+		negcounts["Britain"] = 0;
+		negcounts["Czech Republic"] = 0;
+		negcounts["France"] = 0;
+		negcounts["Germany"] = 0;
+		negcounts["Greece"] = 0;
+		negcounts["Italy"] = 0;
+		negcounts["Poland"] = 0;
+		negcounts["Spain"] = 0;
 	} else if (segment === "Gender") {
 		poscounts["Female"] = 0;
 		poscounts["Male"] = 0;
+		negcounts["Female"] = 0;
+		negcounts["Male"] = 0;
 	} else if (segment === "Age"){
 		poscounts["18-29"] = 0;
 		poscounts["30-49"] = 0;
@@ -581,4 +604,14 @@ function hideToolTip () {
     d3.selectAll(".tooltip").remove();
 }
 
+function countryNameMap (name) {
+  const map = {
+    "United Kingdom": "UK",
+    "Great Britain/United Kingdom" : "UK",
+    "Britain": "UK",
+    "Czech Republic": "CR",
+  }
 
+  if (name in map) return map[name];
+  else return name;
+}
