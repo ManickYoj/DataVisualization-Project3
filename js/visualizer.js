@@ -14,7 +14,7 @@ var GLOBAL = {
 	opinionIDs: [],
   selected: [],
   question: "Q44",
-  currentsegment: null,
+  currentsegment: "Trustworthiness",
 };
 
 var width = 960,
@@ -140,6 +140,15 @@ function setupSingleCountry (country, metric){
 
 	svg.select("#title")
 		.text(" ");
+	//Add a caption
+	svg.append("text")
+		.attr("id", "caption")
+		.attr("x", s.chartWidth/2 + s.margin)
+		.attr("y", s.chartHeight + 1.5*s.margin)
+		.attr("dy","0.3em")
+		.style("text-anchor","middle")
+		.attr("font-size", "10px")
+		.text("A visualization of demographic breakdown by nationality, gender, and age of people who thought that a country was the most (green) or least(red) (category).");
 
 	GLOBAL.segments.forEach(function(seg,i){
 		counts = countSplitsForCountry(GLOBAL.data, country, metric, seg);
@@ -312,6 +321,9 @@ function updateSingleCountry (){
 	svg.select("#title")
 		.text(country + ": " + metric);
 
+	svg.select("#caption")
+		.text("A visualization of demographic breakdown by nationality, gender, and age of people who thought that " + country + " was the highest (green) or lowest (red) in " + metric + ".");
+
 	GLOBAL.segments.forEach(function(seg,i){
 		counts = countSplitsForCountry(GLOBAL.data, country, metric, seg);
 		poscounts[i] = counts.poscounts;
@@ -319,6 +331,8 @@ function updateSingleCountry (){
 		totalpos = counts.allpos;
 		totalneg = counts.allneg;
 	});
+
+	console.log(poscounts);
 
 	var highestcount = totalpos > totalneg ? totalpos : totalneg;
 
@@ -381,10 +395,11 @@ function updateSingleCountry (){
 function countSplitsForCountry (data, country, metric, segment) { 
   var poscounts = {}
   var negcounts = {}
-
+ //Handle the britain Edge Case
+  country = country === "UK" ? "Great Britain/United Kingdom" : country; 
 //Initialize these to 0, so that we can transition all the elements
 	if (segment === "Nationality"){
-		poscounts["Britain"] = 0;
+		poscounts["Great Britain/United Kingdom"] = 0;
 		poscounts["Czech Republic"] = 0;
 		poscounts["France"] = 0;
 		poscounts["Germany"] = 0;
@@ -392,7 +407,7 @@ function countSplitsForCountry (data, country, metric, segment) {
 		poscounts["Italy"] = 0;
 		poscounts["Poland"] = 0;
 		poscounts["Spain"] = 0;
-		negcounts["Britain"] = 0;
+		negcounts["Great Britain/United Kingdom"] = 0;
 		negcounts["Czech Republic"] = 0;
 		negcounts["France"] = 0;
 		negcounts["Germany"] = 0;
@@ -479,8 +494,11 @@ function countSplitsForCountry (data, country, metric, segment) {
 	  	}
 
   	}
-  	
 	});
+	poscounts["UK"] = poscounts["Great Britain/United Kingdom"];
+  delete poscounts["Great Britain/United Kingdom"];
+  negcounts["UK"] = negcounts["Great Britain/United Kingdom"];
+  delete negcounts["Great Britain/United Kingdom"];
 	return {allpos: allpos, allneg: allneg, poscounts: poscounts, negcounts: negcounts };
 }
 
