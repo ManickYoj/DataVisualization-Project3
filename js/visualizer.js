@@ -10,13 +10,12 @@ const GLOBAL = {
   data: [],
 	segments: ["Nationality", "Gender", "Age"],
   selected: [],
+  unselected: [],
   question: "Q44",
   currentsegment: "Trustworthiness",
 };
 
-const countryCounts = {
-
-};
+const countryCounts = {};
 
 const width = 960,
 	height = 1160;
@@ -36,6 +35,10 @@ const g = d3.select("#chart")
 
 //Load in GeoJSON data
 d3.json("./js/europe-map.geo.json", function(json) {
+  json.features.forEach(d => {
+    GLOBAL.unselected.push(countryNameMap(d.properties.country));
+  })
+
 	//Bind data and create one path per GeoJSON feature
 	g.selectAll("path")
     .data(json.features)
@@ -51,14 +54,17 @@ d3.json("./js/europe-map.geo.json", function(json) {
       const ind = GLOBAL.selected.indexOf(elem.attr("id"));
 
       if (ind !== -1) {
+        GLOBAL.unselected.push(elem.attr("id"));
         GLOBAL.selected = GLOBAL.selected.filter((e) => e !== elem.attr("id"));
         elem.classed('selected', false);
       } else {
+        GLOBAL.unselected = GLOBAL.unselected.filter((e) => e !== elem.attr("id"));
         GLOBAL.selected.push(elem.attr("id"));
         elem.classed('selected', true);
       }
 
       // Recalculate totals
+      updateSelected();
       updateSingleCountry();
       tabulateData(GLOBAL.question);
     });
@@ -89,10 +95,15 @@ d3.selectAll(".questionButton")
 getDataRows(function(data) {
 	GLOBAL.data = data;
 
-  // data.forEach((d) => {
-  //   countryNameMap(d.COUNTRY);
-  //   countryCounts
-  // });
+  // Create an object with all country names -> entries mapped
+  let c;
+  data.forEach(d => {
+    c = countryNameMap(d.COUNTRY);
+    if (c in countryCounts) countryCounts[c]++;
+    else countryCounts[c] = 1
+  });
+
+  updateSelected();
 
 	setupSingleCountry("Germany","Trustworthiness");
 });
@@ -145,6 +156,7 @@ function setupSingleCountry (country, metric){
 
 	svg.select("#title")
 		.text(" ");
+
 	//Add a caption
 	svg.append("text")
 		.attr("id", "caption")
@@ -318,7 +330,7 @@ function updateSingleCountry () {
 	var totalneg = 0;
 
 	svg.select("#title")
-		.text(country + ": " + metric);
+		.text((country === undefined ? "No Selection" : country) + ": " + metric);
 
 	svg.select("#caption")
 		.text("A visualization of demographic breakdown by nationality, gender, and age of people who thought that " + country + " was the highest (green) or lowest (red) in " + metric + ".");
@@ -533,10 +545,10 @@ function tabulateData(question) {
 
   var addOne, takeOne;
   GLOBAL.data.forEach((d) => {
-    if (GLOBAL.selected.indexOf(d.COUNTRY) !== -1) {
+    if (GLOBAL.selected.indexOf(countryNameMap(d.COUNTRY)) !== -1) {
+      addOne = countryNameMap(d[`${question}A`]);
+      takeOne = countryNameMap(d[`${question}B`]);
 
-      addOne = d[`${question}A`];
-      takeOne = d[`${question}B`];
 
       if(addOne in counts) counts[addOne]++;
       else counts[addOne] = 1;
@@ -548,17 +560,6 @@ function tabulateData(question) {
       if (counts[takeOne] < -maxCount) maxCount = - counts[takeOne];
     }
   });
-
-  // Clean up anomolies in data
-  if ("Great Britain/United Kingdom" in counts) {
-    counts["UK"] = counts["Great Britain/United Kingdom"];
-    delete counts["Great Britain/United Kingdom"];
-  }
-
-  if ("Czech Republic" in counts) {
-    counts["CR"] = counts["Czech Republic"];
-    delete counts["Czech Republic"];
-  }
 
   if ("Don't know" in counts) delete counts["Don't know"];
   if (" " in counts ) delete counts[" "];
@@ -632,4 +633,34 @@ function countryNameMap (name) {
 
   if (name in map) return map[name];
   else return name;
+}
+
+function updateSelected() {
+  // Define helper to map undefined keys => 0
+  const ifNotUndef = (key, obj) => key in obj ? obj[key] : 0;
+
+  // Alphabatize arrays
+  GLOBAL.unselected.sort();
+  GLOBAL.selected.sort();
+  
+  // Create selections
+  const unselected = d3.select("#unselectedList")
+    .selectAll("div")
+    .data(GLOBAL.unselected, d => d);
+
+  const selected = d3.select("#selectedList")
+    .selectAll("div")
+    .data(GLOBAL.selected, d => d);
+
+  // Remove old elements and create new elements
+  unselected.exit().remove();
+  unselected.enter()
+    .append("div")
+    .text(d => `${d} (${ifNotUndef(d, countryCounts)} data)`);
+
+  // Remove old selections
+  selected.exit().remove();
+  selected.enter()
+    .append("div")
+    .text(d => `${d} (${ifNotUndef(d, countryCounts)} data)`);
 }
