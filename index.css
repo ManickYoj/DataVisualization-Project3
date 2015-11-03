@@ -22,14 +22,22 @@ svg#chart {
   height: 100%;
 }
 
-#controlPanel {
+.controlPanel {
   position: absolute;
+  display: flex;
+  justify-content: center;
+}
+
+#controlPanelLeft {
+  height: 100%;
+  top: 0;
+  flex-direction: column;
+}
+
+#controlPanelBottom {
   width: 100%;
   bottom: 0;
   margin-bottom: 10px;
-
-  display: flex;
-  justify-content:center;
 }
 
 .questionButton {
