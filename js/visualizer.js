@@ -281,8 +281,17 @@ function setupSingleCountry (country, metric){
 
 function updateSingleCountry (){
   console.log(GLOBAL.currentsegment)
+  
+  var svg = d3.select("#singleCountry")
+	var s = computeSizes(svg);
+
   if (GLOBAL.currentsegment === null) return;
-  if (GLOBAL.selected.length === 0) return;
+  if (GLOBAL.selected.length === 0) {
+  	var bars = svg.selectAll(".bar");
+  	bars.attr("y", s.margin+s.chartHeight/2)
+  		.attr("height", 0);
+  	console.log(bars);
+  };
 
   const country = GLOBAL.selected[GLOBAL.selected.length-1]
   const metric = GLOBAL.currentsegment
@@ -290,8 +299,7 @@ function updateSingleCountry (){
   console.log(country)
   console.log(metric)
 
-	var svg = d3.select("#singleCountry")
-	var s = computeSizes(svg);
+	
 
 	var counts = [{},{},{}];
 	var poscounts = [{},{},{}];
@@ -384,9 +392,19 @@ function countSplitsForCountry (data, country, metric, segment) {
 		poscounts["Italy"] = 0;
 		poscounts["Poland"] = 0;
 		poscounts["Spain"] = 0;
+		negcounts["Britain"] = 0;
+		negcounts["Czech Republic"] = 0;
+		negcounts["France"] = 0;
+		negcounts["Germany"] = 0;
+		negcounts["Greece"] = 0;
+		negcounts["Italy"] = 0;
+		negcounts["Poland"] = 0;
+		negcounts["Spain"] = 0;
 	} else if (segment === "Gender") {
 		poscounts["Female"] = 0;
 		poscounts["Male"] = 0;
+		negcounts["Female"] = 0;
+		negcounts["Male"] = 0;
 	} else if (segment === "Age"){
 		poscounts["18-29"] = 0;
 		poscounts["30-49"] = 0;
