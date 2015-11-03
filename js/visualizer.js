@@ -280,15 +280,11 @@ function setupSingleCountry (country, metric){
 }
 
 function updateSingleCountry (){
-  console.log(GLOBAL.currentsegment)
   if (GLOBAL.currentsegment === null) return;
   if (GLOBAL.selected.length === 0) return;
 
   const country = GLOBAL.selected[GLOBAL.selected.length-1]
   const metric = GLOBAL.currentsegment
-
-  console.log(country)
-  console.log(metric)
 
 	var svg = d3.select("#singleCountry")
 	var s = computeSizes(svg);
