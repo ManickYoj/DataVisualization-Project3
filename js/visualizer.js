@@ -89,10 +89,10 @@ d3.selectAll(".questionButton")
 getDataRows(function(data) {
 	GLOBAL.data = data;
 
-  data.forEach((d) => {
-    countryNameMap(d.COUNTRY);
-    countryCounts
-  });
+  // data.forEach((d) => {
+  //   countryNameMap(d.COUNTRY);
+  //   countryCounts
+  // });
 
 	setupSingleCountry("Germany","Trustworthiness");
 });
@@ -235,7 +235,7 @@ function setupSingleCountry (country, metric){
 
 	posbars.enter().append("rect")
 		.attr("class","bar")
-		.style("fill",function (d) {return posColors[d.key];})
+		.style("fill", d => posColors[d.key])
 		.style("stroke", "black")
 		.attr("x", 0)
 		.attr("y", s.margin+s.chartHeight/2)
@@ -253,21 +253,20 @@ function setupSingleCountry (country, metric){
 	    // dirty hack!
 	    d3.selectAll(".tooltip")
 		.attr("transform",
-		      d3.select(this.parentNode).attr("transform"));
-	})
-	.on("mouseout",function(d,i) { 
-	    this.style.fill = posColors[d.key]; 
-	    hideToolTip();
-	});
-;
+		  d3.select(this.parentNode).attr("transform"));
+  	})
+  	.on("mouseout",function(d, i) { 
+  	    this.style.fill = posColors[d.key]; 
+  	    hideToolTip();
+  	});
 	
-	var negsel = sel
+	const negsel = sel
 		.data(negcounts)
 		.append("g")
 		.attr("class", "neg");
 
-	var negbars = negsel.selectAll(".bar")
-		.data(function(d) {return d});
+	const negbars = negsel.selectAll(".bar")
+		.data(d => d);
 
 	negbars.enter().append("rect")
 		.attr("class","bar")
@@ -318,7 +317,6 @@ function updateSingleCountry () {
 	var totalpos = 0;
 	var totalneg = 0;
 
-
 	svg.select("#title")
 		.text(country + ": " + metric);
 
@@ -332,8 +330,6 @@ function updateSingleCountry () {
 		totalpos = counts.allpos;
 		totalneg = counts.allneg;
 	});
-
-	console.log(poscounts);
 
 	var highestcount = totalpos > totalneg ? totalpos : totalneg;
 
@@ -373,13 +369,15 @@ function updateSingleCountry () {
 		.data(poscounts);
 
 	var posbars = possel.selectAll(".bar")
-		.data(function(d) {return d;});
+		.data(d => d);
 
 	posbars.transition()
     .duration(2000)
-		.attr("y", d => yPosPos(d.cumulative + d.value))
-		.attr("height",function(d){return height(d.value);});
-	
+		.attr({
+      y: d => d.value === undefined ? 0 : yPosPos(d.cumulative + d.value),
+      height: d => d.value === undefined ? 0 : height(d.value),
+    });
+
 	var negsel = svg.selectAll(".neg")
 		.data(negcounts);
 
@@ -389,8 +387,10 @@ function updateSingleCountry () {
 	negbars
 		.transition()
     .duration(2000)
-		.attr("y", function(d){return yPosNeg(d.cumulative);})
-		.attr("height",function(d){return height(d.value);});
+		.attr({
+      y: d => yPosNeg(d.cumulative),
+		  height: d => height(d.value === undefined ? 0 : d.value),
+    });
 }
 
 function countSplitsForCountry (data, country, metric, segment) { 
