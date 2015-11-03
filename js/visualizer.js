@@ -384,9 +384,19 @@ function countSplitsForCountry (data, country, metric, segment) {
 		poscounts["Italy"] = 0;
 		poscounts["Poland"] = 0;
 		poscounts["Spain"] = 0;
+		negcounts["Britain"] = 0;
+		negcounts["Czech Republic"] = 0;
+		negcounts["France"] = 0;
+		negcounts["Germany"] = 0;
+		negcounts["Greece"] = 0;
+		negcounts["Italy"] = 0;
+		negcounts["Poland"] = 0;
+		negcounts["Spain"] = 0;
 	} else if (segment === "Gender") {
 		poscounts["Female"] = 0;
 		poscounts["Male"] = 0;
+		negcounts["Female"] = 0;
+		negcounts["Male"] = 0;
 	} else if (segment === "Age"){
 		poscounts["18-29"] = 0;
 		poscounts["30-49"] = 0;
